@@ -1,0 +1,11 @@
+##===- tools/COTPasses/Makefile ----------------------------*- Makefile -*-===##
+
+LEVEL = ../..
+
+LIBRARYNAME = COTPasses
+
+LOADABLE_MODULE = 1
+
+USEDLIBS = CodeMorphing.a
+
+include $(LEVEL)/Makefile.common

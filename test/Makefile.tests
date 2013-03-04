@@ -1,0 +1,3 @@
+##===- test/Makefile.tests ---------------------------------*- Makefile -*-===##
+
+include $(LLVM_SRC_ROOT)/test/Makefile.tests
