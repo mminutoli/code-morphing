@@ -26,11 +26,19 @@
 
 namespace cmp {
 
+class CodeMorphing;
+
+// Transformations
+CodeMorphing * CreateCodeMorphingPass();
+
 } // End namespace cot.
 
 namespace llvm {
 
 class PassRegistry;
+
+// Transformations
+void initializeCodeMorphingPass(PassRegistry & Registry);
 
 } // End namespace llvm.
 

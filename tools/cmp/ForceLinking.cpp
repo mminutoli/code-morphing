@@ -45,6 +45,7 @@ public:
     // Analysis.
 
     // Transformations.
+    CreateCodeMorphingPass();
   }
 };
 
@@ -65,6 +66,7 @@ public:
     // Dot Printer Passes
 
     // Transformations
+    initializeCodeMorphingPass(Registry);
   }
 };
 
