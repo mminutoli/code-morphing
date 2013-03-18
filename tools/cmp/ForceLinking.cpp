@@ -46,6 +46,7 @@ public:
 
     // Transformations.
     CreateCodeMorphingPass();
+    CreateDeclareRandomizeFunctionPass();
   }
 };
 
@@ -67,6 +68,7 @@ public:
 
     // Transformations
     initializeCodeMorphingPass(Registry);
+    initializeDeclareRandomizeFunctionPass(Registry);
   }
 };
 

@@ -27,9 +27,11 @@
 namespace cmp {
 
 class CodeMorphing;
+class DeclareRandomizeFunction;
 
 // Transformations
 CodeMorphing * CreateCodeMorphingPass();
+DeclareRandomizeFunction * CreateDeclareRandomizeFunctionPass();
 
 } // End namespace cot.
 
@@ -39,6 +41,7 @@ class PassRegistry;
 
 // Transformations
 void initializeCodeMorphingPass(PassRegistry & Registry);
+void initializeDeclareRandomizeFunctionPass(PassRegistry & Registry);
 
 } // End namespace llvm.
 
