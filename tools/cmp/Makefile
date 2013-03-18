@@ -2,7 +2,7 @@
 
 LEVEL = ../..
 
-LIBRARYNAME = COTPasses
+LIBRARYNAME = CMPasses
 
 LOADABLE_MODULE = 1
 
