@@ -21,6 +21,7 @@
 #include "cmp/AllPasses.h"
 #include "cmp/AlternativesNumberVector.h"
 #include "cmp/DeclareRandomizeFunction.h"
+#include "cmp/InstructionAlternatives.h"
 #include "cmp/InstructionAlternativeUtils.h"
 
 #include "llvm/ADT/ArrayRef.h"
@@ -45,11 +46,23 @@ CodeMorphing::CodeMorphing() :
     llvm::FunctionPass(ID)
 {}
 
+
+namespace {
+typedef std::pair<Instruction *, std::vector<BasicBlock *> > replacement;
+}
+
 static bool InsertChoiceVector(Function &, Pass *);
+static bool
+BuildReplacementList(Function & , std::vector<replacement> &);
 bool CodeMorphing::runOnFunction(Function & F)
 {
   bool result = false;
-  result |= InsertChoiceVector(F, this);
+  std::vector<replacement> replacementList;
+  result |= BuildReplacementList(F, replacementList);
+  if (result)
+  {
+    InsertChoiceVector(F, this);
+  }
   return result;
 }
 
@@ -162,4 +175,30 @@ InsertChoiceVector(Function & F, Pass * P)
   ReplaceInstWithInst(originalJump, jumpBackToCond);
 
   return true;
+}
+
+
+static bool
+BuildReplacementList(Function & F, std::vector<replacement> & V)
+{
+  typedef Function::BasicBlockListType::iterator BlockListIterator;
+  for (BlockListIterator block = F.begin(), lastBlock = F.end();
+       block != lastBlock; ++block)
+  {
+    typedef BasicBlock::iterator InstructionIterator;
+    for (InstructionIterator instruction = block->begin(),
+                         lastInstruction = block->end();
+         instruction != lastInstruction; ++instruction)
+    {
+      std::vector<BasicBlock *> alternativeBlocks =
+          InstructionAlternatives::Build(*instruction);
+      if (!alternativeBlocks.empty())
+      {
+        replacement rep = std::make_pair(&*instruction, alternativeBlocks);
+        V.push_back(rep);
+      }
+    }
+  }
+
+  return !V.empty();
 }
