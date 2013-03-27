@@ -53,6 +53,11 @@ CMP_SET_ALTERNATIVE_NUMBER(Xor, 1);
 
 #undef CMP_SET_ALTERNATIVE_NUMBER
 
+
+InstructionTy
+getInstTy(llvm::Instruction *);
+
+
 namespace
 {
 
