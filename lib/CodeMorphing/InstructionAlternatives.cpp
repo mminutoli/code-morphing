@@ -18,14 +18,77 @@
 
 #include "cmp/InstructionAlternatives.h"
 
+#include "cmp/InstructionAlternativeUtils.h"
+
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/DerivedTypes.h"
+
 
 using namespace cmp;
 using namespace llvm;
+
+
+template <InstructionTy>
+std::vector<llvm::BasicBlock *> buildAlternatives(llvm::Instruction & I);
+
+
+// Do not define it.
+template <>
+std::vector<llvm::BasicBlock *>
+buildAlternatives<LastInstructionTy>(llvm::Instruction & I);
+
+
+template <>
+std::vector<llvm::BasicBlock *> buildAlternatives<Xor>(llvm::Instruction & I)
+{
+  std::vector<BasicBlock *> alternatives;
+
+  Value * firstOperand = I.getOperand(0);
+  Value * secondOperand = I.getOperand(1);
+
+  // First Xor alternative
+  // Implements : A xor B = (A or B) and not(A and B)
+  // The not operator isn't present in the LLVM IR for this reason I
+  // have used xor with a constant of all ones to obtain the not.
+  BasicBlock * BB = BasicBlock::Create(I.getContext());
+  BinaryOperator * orA = BinaryOperator::Create(Instruction::Or, firstOperand,
+                                                secondOperand, "", BB);
+  BinaryOperator * andA = BinaryOperator::Create(Instruction::And, firstOperand,
+                                                 secondOperand, "", BB);
+  IntegerType * type = IntegerType::get(I.getContext(),
+                                        andA->getType()->getIntegerBitWidth());
+  Constant * allOnes = ConstantInt::get(type, type->getMask());
+  BinaryOperator * notA = BinaryOperator::Create(Instruction::Xor, andA,
+                                                 allOnes, "", BB);
+  BinaryOperator::Create(Instruction::And, notA, orA, "", BB);
+
+  alternatives.push_back(BB);
+
+  return alternatives;
+}
 
 
 std::vector<llvm::BasicBlock *>
 InstructionAlternatives::Build(llvm::Instruction & I)
 {
   std::vector<BasicBlock *> alternatives;
+
+  InstructionTy type = getInstTy(&I);
+
+#define HANDLE_ISTRUCTION_TYPE(TYPE)            \
+  case TYPE:                                    \
+    alternatives = buildAlternatives<TYPE>(I);  \
+    break
+
+  switch (type) {
+    HANDLE_ISTRUCTION_TYPE(Xor);
+    case LastInstructionTy:
+      break;
+  }
+
+#undef HANDLE_ISTRUCTION_TYPE
+
   return alternatives;
 }
