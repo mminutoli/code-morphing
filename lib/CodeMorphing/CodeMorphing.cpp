@@ -54,6 +54,8 @@ typedef std::pair<Instruction *, std::vector<BasicBlock *> > replacement;
 static bool InsertChoiceVector(Function &, Pass *);
 static bool
 BuildReplacementList(Function & , std::vector<replacement> &);
+static bool
+InsertAlternativeBlocks(Function &, std::vector<replacement> &, Pass *);
 bool CodeMorphing::runOnFunction(Function & F)
 {
   bool result = false;
@@ -62,6 +64,7 @@ bool CodeMorphing::runOnFunction(Function & F)
   if (result)
   {
     InsertChoiceVector(F, this);
+    InsertAlternativeBlocks(F, replacementList, this);
   }
   return result;
 }
@@ -201,4 +204,68 @@ BuildReplacementList(Function & F, std::vector<replacement> & V)
   }
 
   return !V.empty();
+}
+
+
+static bool
+InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
+{
+  bool result = false;
+
+  typedef std::vector<replacement>::iterator ReplacementItr;
+  for (ReplacementItr I = V.begin(), E = V.end(); I != E; ++I)
+  {
+    Instruction * i = I->first;
+    std::vector<BasicBlock *> & replacementList = I->second;
+
+    // Split the block containing I
+    BasicBlock * upperBlock = i->getParent();
+    BasicBlock * originalBlock = SplitBlock(upperBlock, i, P);
+    originalBlock->setName("");
+    BasicBlock * lowerBlock = SplitBlock(originalBlock, i->getNextNode(), P);
+    lowerBlock->setName("");
+
+    IntegerType * Int32Ty = Type::getInt32Ty(F.getContext());
+    Value * choiceVector = F.getValueSymbolTable().lookup("choice.vector");
+    assert(choiceVector && "choice.vector not found!");
+    ConstantInt * zero = ConstantInt::get(Int32Ty, 0);
+    ConstantInt * index = ConstantInt::get(Int32Ty, getInstTy(i));
+    std::vector<Value *> indexes;
+    indexes.push_back(zero);
+    indexes.push_back(index);
+    GetElementPtrInst * choicePtr =
+        GetElementPtrInst::Create(choiceVector, indexes, "",
+                                  upperBlock->getTerminator());
+    LoadInst * choice =
+        new LoadInst(choicePtr, "", upperBlock->getTerminator());
+    SwitchInst * test = SwitchInst::Create(choice, originalBlock, 0);
+    ReplaceInstWithInst(upperBlock->getTerminator(), test);
+
+    test->addCase(zero, originalBlock);
+    PHINode * phi = PHINode::Create(i->getType(), 0);
+    i->replaceAllUsesWith(phi);
+    phi->addIncoming(originalBlock->begin(), originalBlock);
+
+    lowerBlock->getInstList().push_front(phi);
+
+    unsigned int alternative = 1;
+    for (std::vector<BasicBlock *>::iterator
+             replacement = replacementList.begin(),
+             lastReplacement = replacementList.end();
+         replacement != lastReplacement; ++replacement)
+    {
+      ConstantInt * alternativeNumber =
+          ConstantInt::get(Int32Ty, alternative);
+      test->addCase(alternativeNumber, *replacement);
+
+      phi->addIncoming(&(*replacement)->back(), *replacement);
+
+      BranchInst::Create(lowerBlock, *replacement);
+      F.getBasicBlockList().push_back(*replacement);
+
+      ++alternative;
+    }
+  }
+
+  return result;
 }
