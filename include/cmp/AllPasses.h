@@ -26,10 +26,12 @@
 
 namespace cmp {
 
+class AlternativesNumberVector;
 class CodeMorphing;
 class DeclareRandomizeFunction;
 
 // Transformations
+AlternativesNumberVector * CreateAlternativesNumberVectorPass();
 CodeMorphing * CreateCodeMorphingPass();
 DeclareRandomizeFunction * CreateDeclareRandomizeFunctionPass();
 
@@ -40,6 +42,7 @@ namespace llvm {
 class PassRegistry;
 
 // Transformations
+void initializeAlternativesNumberVectorPass(PassRegistry & Registry);
 void initializeCodeMorphingPass(PassRegistry & Registry);
 void initializeDeclareRandomizeFunctionPass(PassRegistry & Registry);
 

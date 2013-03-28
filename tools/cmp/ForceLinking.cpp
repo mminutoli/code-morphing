@@ -45,6 +45,7 @@ public:
     // Analysis.
 
     // Transformations.
+    CreateAlternativesNumberVectorPass();
     CreateCodeMorphingPass();
     CreateDeclareRandomizeFunctionPass();
   }
@@ -67,6 +68,7 @@ public:
     // Dot Printer Passes
 
     // Transformations
+    initializeAlternativesNumberVectorPass(Registry);
     initializeCodeMorphingPass(Registry);
     initializeDeclareRandomizeFunctionPass(Registry);
   }
