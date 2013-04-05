@@ -1,0 +1,83 @@
+
+* CMP -- Code Morphing Pass
+
+This pass does static code morphing on the IR of the llvm compiler. It
+has been developed as a project for an exam on cryptography.
+
+It's licenced under the GPL v3 as stated in every source file in the
+project. For any futher information on the licence please refer to
+http://www.gnu.org/licenses/gpl.html
+
+* Quick Start
+
+It is strongly encouraged to keep source tree separated from build tree, so we
+assume the following directory structure:
+
+- Let `LLVM_WORK` be the working directory
+- Let `LLVM_SRC` the LLVM sources directory
+- Let `LLVM_BUILD` the LLVM objects directory
+- Let `LLVM_ROOT` the LLVM root installation directory
+
+You can use whichever working directory you want. The other directory are
+assumed to be children of `LLVM_WORK`. From now on:
+
+- Let `LLVM_SRC` be `$LLMV_WORK/src`
+- Let `LLVM_BUILD` be `$LLVM_WORK/build`
+- Let `LLVM_ROOT` be `$LLVM_ROOT/root`
+
+First we create the working directory:
+
+#+begin_src: shell
+    $ mkdir $LLVM_WORK
+#+end_src
+
+We need LLVM and CLANG. We can get them from Git repositories:
+
+#+begin_src: shell
+    $ cd $LLVM_WORK
+    $ git clone http://llvm.org/git/llvm.git $LLVM_SRC
+    $ cd $LLVM_SRC
+    $ git clone http://llvm.org/git/clang.git tools/clang
+    $ cd tools/clang
+#+end_src
+
+We will build in `LLVM_BUILD`:
+
+#+begin_src: shell
+    $ mkdir $LLVM_BUILD
+    $ cd $LLVM_BUILD
+    $ $LLVM_SRC/configure --prefix=$LLVM_ROOT --enable-optimized
+    $ make -j $N
+    $ make install
+#+end_src
+
+In order to start working with CMP you have to clone its master repository on
+GitHub into LLVM `projects` directory:
+
+#+begin_src: shell
+    $ cd $LLVM_SRC/projects
+    $ git clone https://github.com/mminutoli/code-morphing.git
+#+end_src
+
+You need to build the `configure` script:
+
+#+begin_src: shell
+    $ cd code-morphing/autoconf
+    $ ./AutoRegen.sh
+#+end_src
+
+Finally you have to build it:
+
+#+begin_src: shell
+    $ cd $LLVM_BUILD/projects
+    $ mkdir cot
+    $ cd cot
+    $ $LLVM_SRC/projects/code-morphing/configure --prefix=$LLVM_ROOT
+    $ make -j $N
+#+end_src
+
+After building, tests are run using:
+
+#+begin_src: shell
+    $ make check
+#+end_src
