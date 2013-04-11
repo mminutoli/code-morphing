@@ -4,8 +4,8 @@
 This pass does static code morphing on the IR of the llvm compiler. It
 has been developed as a project for an exam on cryptography.
 
-It's licenced under the GPL v3 as stated in every source file in the
-project. For any futher information on the licence please refer to
+It's licensed under the GPL v3 as stated in every source file in the
+project. For any further information on the license please refer to
 http://www.gnu.org/licenses/gpl.html
 
 * Quick Start
@@ -81,3 +81,65 @@ After building, tests are run using:
 #+begin_src: shell
     $ make check
 #+end_src
+
+* Adding instruction alternatives
+
+The steps required to add alternatives to an instruction starting from
+scratch are:
+- Add the instruction to the InstructionTy enumeration
+- Declare the alternative numbers
+- Handle the instruction inside getInstTy
+- Implement the build function
+- Add tests for the new alternative
+
+** Add the instruction to the enumeration
+
+Open the file include/cmp/InstructionAlternativeUtils.h and search for
+the enumeration InstructionTy. Add the name of the instruction you
+want to handle.
+
+*Important* : The name used for the instruction *must be* the same of
+the one used in llvm for the instruction in the Instruction
+enumeration.
+
+** Declare the alternative numbers
+
+Always in the same file, but some line later, there is a table that
+declare the alternatives available for all the instruction in the
+InstructionTy.
+
+Add a line of the kind:
+#+begin_src: cpp
+CMP_SET_ALTERNATIVE_NUMBER(INST, NUM);
+#+end_src
+
+Where INST is the name used in InstructionTy and NUM is an integer
+value corresponding to the alternatives you want to provide. (start
+counting from 1 :) )
+
+** Handle the instruction inside getInstTy
+
+The implementation need a function able to do the reverse mapping
+from the llvm instruction to the enumeration InstructionTy.
+
+This mapping is given by the getInstTy function.
+
+Open the lib/CodeMorphing/InstructionAlternativeUtils.cpp and add to
+the body of the function a CHECK_INST invocation for your instruction.
+
+Looking at the CHECK_INST macro you will understand why the name in
+the enumeration InstructionTy *must be* the same used in llvm.
+
+** Implement the build function
+
+Open the lib/CodeMorphing/InstructionAlternatives.cpp and implement a
+specialization for the function template buildAlternatives for your
+instruction.
+
+The function must return a vector containing all the alternative
+Basic Blocks. The terminator instruction will be put automatically by
+the transformation pass, so don't put them.
+
+** Implement test
+
+Last but not least implement test in the usual way with llvm.
