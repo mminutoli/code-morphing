@@ -27,60 +27,60 @@ assumed to be children of `LLVM_WORK`. From now on:
 
 First we create the working directory:
 
-#+begin_src: shell
+#+BEGIN_SRC: shell
     $ mkdir $LLVM_WORK
-#+end_src
+#+END_SRC
 
 We need LLVM and CLANG. We can get them from Git repositories:
 
-#+begin_src: shell
+#+BEGIN_SRC: shell
     $ cd $LLVM_WORK
     $ git clone http://llvm.org/git/llvm.git $LLVM_SRC
     $ cd $LLVM_SRC
     $ git clone http://llvm.org/git/clang.git tools/clang
     $ cd tools/clang
-#+end_src
+#+END_SRC
 
 We will build in `LLVM_BUILD`:
 
-#+begin_src: shell
+#+BEGIN_SRC: shell
     $ mkdir $LLVM_BUILD
     $ cd $LLVM_BUILD
     $ $LLVM_SRC/configure --prefix=$LLVM_ROOT --enable-optimized
     $ make -j $N
     $ make install
-#+end_src
+#+END_SRC
 
 In order to start working with CMP you have to clone its master repository on
 GitHub into LLVM `projects` directory:
 
-#+begin_src: shell
+#+BEGIN_SRC: shell
     $ cd $LLVM_SRC/projects
     $ git clone https://github.com/mminutoli/code-morphing.git
-#+end_src
+#+END_SRC
 
 You need to build the `configure` script:
 
-#+begin_src: shell
+#+BEGIN_SRC: shell
     $ cd code-morphing/autoconf
     $ ./AutoRegen.sh
-#+end_src
+#+END_SRC
 
 Finally you have to build it:
 
-#+begin_src: shell
+#+BEGIN_SRC: shell
     $ cd $LLVM_BUILD/projects
     $ mkdir cot
     $ cd cot
     $ $LLVM_SRC/projects/code-morphing/configure --prefix=$LLVM_ROOT
     $ make -j $N
-#+end_src
+#+END_SRC
 
 After building, tests are run using:
 
-#+begin_src: shell
+#+BEGIN_SRC: shell
     $ make check
-#+end_src
+#+END_SRC
 
 * Adding instruction alternatives
 
@@ -109,9 +109,9 @@ declare the alternatives available for all the instruction in the
 InstructionTy.
 
 Add a line of the kind:
-#+begin_src: cpp
+#+BEGIN_SRC: cpp
 CMP_SET_ALTERNATIVE_NUMBER(INST, NUM);
-#+end_src
+#+END_SRC
 
 Where INST is the name used in InstructionTy and NUM is an integer
 value corresponding to the alternatives you want to provide. (start
