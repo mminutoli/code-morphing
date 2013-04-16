@@ -187,3 +187,8 @@ the transformation pass, so don't put them.
 ** Implement test
 
 Last but not least implement test in the usual way with llvm.
+
+* Testing with real algorithms
+
+If you want to test this pass with a real algorithm please take a
+look at [[https://github.com/mminutoli/code-morphing-tests][Code Morphing Test]].
