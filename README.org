@@ -82,6 +82,50 @@ After building, tests are run using:
     $ make check
 #+END_SRC
 
+* Transformation details
+** The problem
+Embedded processor are subject to cross-side channel attacks due to
+the simplicity of their Instruction Set (IS) and the lack of hardware
+counter measure to this issue.
+
+A possible solution would be to rewrite at Run Time (RT) some
+instruction with pattern of instruction semantically equivalent.
+Even though this approach works well in other environments, it is not
+applicable in situation were the code is executed from a static ram.
+
+The two main problems that discourage this approach are:
+ - long latency to switch the SRAM in a writable state
+ - SRAM can be written a limited amount of times.
+
+** Proposed solution
+To overcame the limitation explained above this pass works on the IR
+of LLVM to generate a final binary that has a randomized Control Flow
+(CF) without the need of memory rewriting at RT.
+
+The steps taken by the transformation are:
+ - Add a the alternatives vector inside the module
+ - Declare a randomize function
+ - For every function that need it add a choice vector and an
+   initialization loop
+ - For every basic block that need it add the alternative flows
+
+Lets explain the components of the final code in more details:
+ - Alternative vector :: This vector contains, for every instruction
+      that has alternatives declared, the number of available
+      alternatives.
+ - Randomize function :: This is a function that generate an integer
+      random number between 0 and its argument included.
+ - Choice vector :: This vector contains, for every instruction that
+                    has alternatives, the selected alternative. At the
+                    start of the function the loop get initialized
+                    using the Randomize function.
+
+In this way the code produced by the Pass contains all the
+alternatives available for the instructions and the randomization of
+the CF is done using a random function and without the need to
+rewrite memory. Clearly there is no free lunch. The improved security
+comes at the cost of increasing the binary size.
+
 * Adding instruction alternatives
 
 The steps required to add alternatives to an instruction starting from
