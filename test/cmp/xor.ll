@@ -49,6 +49,7 @@ entry:
 ;CHECK-NEXT:   switch i32 %10, label %11 [
 ;CHECK-NEXT:     i32 0, label %11
 ;CHECK-NEXT:     i32 1, label %14
+;CHECK-NEXT:     i32 2, label %19
 ;CHECK-NEXT:   ]
 
 ;CHECK:      ; <label>:11
@@ -66,6 +67,13 @@ entry:
 ;CHECK-NEXT:  %18 = and i32 %17, %15
 ;CHECK-NEXT:  br label %12
 
+;CHECK:     ; <label>:19
+;CHECK-NEXT:  %20 = xor i32 %8, -1
+;CHECK-NEXT:  %21 = and i32 %7, %20
+;CHECK-NEXT:  %22 = xor i32 %7, -1
+;CHECK-NEXT:  %23 = and i32 %8, %22
+;CHECK-NEXT:  %24 = or i32 %21, %23
+;CHECK-NEXT:  br label %12
 
 ;CHECK: randomize
 

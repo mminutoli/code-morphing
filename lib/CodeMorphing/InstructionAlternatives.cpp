@@ -66,6 +66,21 @@ std::vector<llvm::BasicBlock *> buildAlternatives<Xor>(llvm::Instruction & I)
 
   alternatives.push_back(BB);
 
+  // Second Xor alternative
+  // Implements : A xor B = (A and not B) or (not A and B)
+  BB = BasicBlock::Create(I.getContext());
+  BinaryOperator * notB = BinaryOperator::Create(Instruction::Xor, secondOperand,
+                                                 allOnes, "", BB);
+  andA = BinaryOperator::Create(Instruction::And, firstOperand,
+                                notB, "", BB);
+  notA = BinaryOperator::Create(Instruction::Xor, firstOperand,
+                                allOnes, "", BB);
+  BinaryOperator * andB = BinaryOperator::Create(Instruction::And, secondOperand,
+                                                 notA, "", BB);
+  orA = BinaryOperator::Create(Instruction::Or, andA, andB, "", BB);
+
+  alternatives.push_back(BB);
+
   return alternatives;
 }
 

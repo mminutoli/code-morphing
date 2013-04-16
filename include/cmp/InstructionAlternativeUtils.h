@@ -48,7 +48,7 @@ template <unsigned Type> class NumberOfAlternativesFor;
   }
 
 // Alternative Number table
-CMP_SET_ALTERNATIVE_NUMBER(Xor, 1);
+CMP_SET_ALTERNATIVE_NUMBER(Xor, 2);
 // End of Alternative Number table
 
 #undef CMP_SET_ALTERNATIVE_NUMBER
