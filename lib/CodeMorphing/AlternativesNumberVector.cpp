@@ -47,15 +47,25 @@ AlternativesNumberVector::runOnModule(llvm::Module &M)
   ArrayType * IntArrayTy =
       llvm::ArrayType::get(ElementTy, LastInstructionTy);
 
-  SmallVector<Constant *, LastInstructionTy> Constructor;
-  InitializeAlternativesVector<>::exec(Constructor, ElementTy);
-  Constant * InitList = ConstantArray::get(IntArrayTy, Constructor);
+  SmallVector<Constant *, LastInstructionTy> RegRegConstructor;
+  InitializeAlternativesVector<RegReg>::exec(RegRegConstructor, ElementTy);
+  Constant * regRegInitList = ConstantArray::get(IntArrayTy, RegRegConstructor);
   (void)new GlobalVariable(M,
                            IntArrayTy,
                            false,
                            GlobalVariable::InternalLinkage,
-                           InitList,
-                           "AlternativeNumber");
+                           regRegInitList,
+                           "RegRegAlternativeNumber");
+
+  SmallVector<Constant *, LastInstructionTy> RegConstConstructor;
+  InitializeAlternativesVector<RegConst>::exec(RegConstConstructor, ElementTy);
+  Constant * regConstInitList = ConstantArray::get(IntArrayTy, RegConstConstructor);
+  (void)new GlobalVariable(M,
+                           IntArrayTy,
+                           false,
+                           GlobalVariable::InternalLinkage,
+                           regConstInitList,
+                           "RegConstAlternativeNumber");
   return true;
 }
 

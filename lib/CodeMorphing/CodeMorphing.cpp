@@ -115,9 +115,13 @@ InsertChoiceVector(Function & F, Pass * P)
   Type * Int32Ty = Type::getInt32Ty(F.getContext());
   ArrayType * Int32ArrayTy =
       ArrayType::get(Int32Ty, LastInstructionTy);
-  AllocaInst * choiceVector =
-      new AllocaInst(Int32ArrayTy, "choice.vector", entry->getTerminator());
-  choiceVector->setAlignment(4);
+  AllocaInst * regRegChoiceVector =
+      new AllocaInst(Int32ArrayTy, "regreg.choice.vector", entry->getTerminator());
+  regRegChoiceVector->setAlignment(4);
+  AllocaInst * regConstChoiceVector =
+      new AllocaInst(Int32ArrayTy, "regconst.choice.vector", entry->getTerminator());
+  regConstChoiceVector->setAlignment(4);
+
 
   AllocaInst * index =
       new AllocaInst(Int32Ty, "idx.vector", entry->getTerminator());
@@ -153,7 +157,8 @@ InsertChoiceVector(Function & F, Pass * P)
   //   5. jump back to the loopCondition block
   const ValueSymbolTable & VST = F.getParent()->getValueSymbolTable();
   Value * randomize = VST.lookup("randomize");
-  Value * alternativesVector = VST.lookup("AlternativeNumber");
+  Value * regRegAlternativesVector = VST.lookup("RegRegAlternativeNumber");
+  Value * regConstAlternativesVector = VST.lookup("RegConstAlternativeNumber");
 
   originalJump = loopBody->getTerminator();
   loadIdx = new LoadInst(index, "", originalJump);
@@ -161,18 +166,32 @@ InsertChoiceVector(Function & F, Pass * P)
   std::vector<Value *> indexes;
   indexes.push_back(zero);
   indexes.push_back(loadIdx);
-  GetElementPtrInst * alternativesVecElemPtr =
-      GetElementPtrInst::Create(alternativesVector, indexes, "", originalJump);
-  alternativesVecElemPtr->setIsInBounds(true);
-  LoadInst * loadArg = new LoadInst(alternativesVecElemPtr, "", originalJump);
+  GetElementPtrInst * regRegAlternativesVecElemPtr =
+      GetElementPtrInst::Create(regRegAlternativesVector, indexes,
+                                "", originalJump);
+  regRegAlternativesVecElemPtr->setIsInBounds(true);
+  LoadInst * regRegLoadArg = new LoadInst(regRegAlternativesVecElemPtr,
+                                          "", originalJump);
+  GetElementPtrInst * regConstAlternativesVecElemPtr =
+      GetElementPtrInst::Create(regConstAlternativesVector, indexes,
+                                "", originalJump);
+  regConstAlternativesVecElemPtr->setIsInBounds(true);
+  LoadInst * regConstLoadArg = new LoadInst(regConstAlternativesVecElemPtr,
+                                            "", originalJump);
 
-  CallInst * randomizeCall =
-      CallInst::Create(randomize, loadArg, "", originalJump);
+  CallInst * regRegRandomizeCall =
+      CallInst::Create(randomize, regRegLoadArg, "", originalJump);
+  CallInst * regConstRandomizeCall =
+      CallInst::Create(randomize, regConstLoadArg, "", originalJump);
 
-  GetElementPtrInst * choiceVecElemPtr =
-      GetElementPtrInst::Create(choiceVector, indexes, "", originalJump);
-  choiceVecElemPtr->setIsInBounds(true);
-  newIdxValue = new StoreInst(randomizeCall, choiceVecElemPtr, originalJump);
+  GetElementPtrInst * regRegChoiceVecElemPtr =
+      GetElementPtrInst::Create(regRegChoiceVector, indexes, "", originalJump);
+  regRegChoiceVecElemPtr->setIsInBounds(true);
+  newIdxValue = new StoreInst(regRegRandomizeCall, regRegChoiceVecElemPtr, originalJump);
+  GetElementPtrInst * regConstChoiceVecElemPtr =
+      GetElementPtrInst::Create(regConstChoiceVector, indexes, "", originalJump);
+  regConstChoiceVecElemPtr->setIsInBounds(true);
+  newIdxValue = new StoreInst(regConstRandomizeCall, regConstChoiceVecElemPtr, originalJump);
 
   BranchInst * jumpBackToCond = BranchInst::Create(loopCondition);
   ReplaceInstWithInst(originalJump, jumpBackToCond);
@@ -207,6 +226,17 @@ BuildReplacementList(Function & F, std::vector<replacement> & V)
 }
 
 
+std::string choiceVectorName(Instruction * i)
+{
+  Value * firstOperand = i->getOperand(0);
+  Value * secondOperand = i->getOperand(1);
+
+  if (isa<Constant>(firstOperand) || isa<Constant>(secondOperand))
+    return "regconst.choice.vector";
+  return "regreg.choice.vector";
+}
+
+
 static bool
 InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
 {
@@ -226,7 +256,7 @@ InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
     lowerBlock->setName("");
 
     IntegerType * Int32Ty = Type::getInt32Ty(F.getContext());
-    Value * choiceVector = F.getValueSymbolTable().lookup("choice.vector");
+    Value * choiceVector = F.getValueSymbolTable().lookup(choiceVectorName(i));
     assert(choiceVector && "choice.vector not found!");
     ConstantInt * zero = ConstantInt::get(Int32Ty, 0);
     ConstantInt * index = ConstantInt::get(Int32Ty, getInstTy(i));

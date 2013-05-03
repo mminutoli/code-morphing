@@ -37,14 +37,17 @@ enum InstructionTy
   LastInstructionTy
 };
 
-template <unsigned Type> class NumberOfAlternativesFor;
+struct RegReg {};
+struct RegConst {};
 
-#define CMP_SET_ALTERNATIVE_NUMBER(Inst, Num)   \
-  template <>                                   \
-  class NumberOfAlternativesFor<Inst>           \
-  {                                             \
-   public:                                      \
-    static int const value = Num;               \
+template <unsigned Type, typename SubTy> class NumberOfAlternativesFor;
+
+#define CMP_SET_ALTERNATIVE_NUMBER(Inst, Num, SubTy) \
+  template <>                                        \
+  class NumberOfAlternativesFor<Inst, SubTy>         \
+  {                                                  \
+   public:                                           \
+    static int const value = Num;                    \
   }
 
 // Alternative Number table
@@ -78,7 +81,7 @@ struct InitializeAlternativesVectorBase
 // order. In the other way around we should have used push_front that
 // for every insertion need to move forward all the elements already
 // in the vector.
-template <unsigned InstTy = FirstInstructionTy>
+template <typename SubTy, unsigned InstTy = FirstInstructionTy>
 struct  InitializeAlternativesVector : InitializeAlternativesVectorBase
 {
   static void exec(vector_type & SV, element_type_ptr ElementTy)
@@ -87,14 +90,14 @@ struct  InitializeAlternativesVector : InitializeAlternativesVectorBase
         llvm::Constant::getIntegerValue(
             ElementTy,
             llvm::APInt(ElementTy->getIntegerBitWidth(),
-                        NumberOfAlternativesFor<InstTy>::value));
+                        NumberOfAlternativesFor<InstTy, SubTy>::value));
     SV.push_back(value);
-    InitializeAlternativesVector<InstTy + 1>::exec(SV, ElementTy);
+    InitializeAlternativesVector<SubTy, InstTy + 1>::exec(SV, ElementTy);
   }
 };
 
-template <>
-struct InitializeAlternativesVector<LastInstructionTy>
+template <typename SubTy>
+    struct InitializeAlternativesVector<SubTy, LastInstructionTy>
     : InitializeAlternativesVectorBase
 {
   static void exec(vector_type & SV, element_type_ptr ElementTy)
