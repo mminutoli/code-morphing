@@ -33,7 +33,7 @@ namespace cmp
 enum InstructionTy
 {
   FirstInstructionTy = 0,
-  Xor = FirstInstructionTy,
+#include <generated/InstructionDecl.def>
   LastInstructionTy
 };
 
@@ -48,7 +48,7 @@ template <unsigned Type> class NumberOfAlternativesFor;
   }
 
 // Alternative Number table
-CMP_SET_ALTERNATIVE_NUMBER(Xor, 2);
+#include <generated/InstructionTable.def>
 // End of Alternative Number table
 
 #undef CMP_SET_ALTERNATIVE_NUMBER

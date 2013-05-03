@@ -31,7 +31,7 @@ cmp::getInstTy(Instruction * I)
 #define CHECK_INST(Ty) \
   do { if (I->getOpcode() == Instruction::Ty) return Ty; } while (0)
 
-  CHECK_INST(Xor);
+#include <generated/ReverseMapping.def>
 
 #undef CHECK_INST
   return LastInstructionTy;

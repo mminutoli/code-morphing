@@ -40,49 +40,7 @@ std::vector<llvm::BasicBlock *>
 buildAlternatives<LastInstructionTy>(llvm::Instruction & I);
 
 
-template <>
-std::vector<llvm::BasicBlock *> buildAlternatives<Xor>(llvm::Instruction & I)
-{
-  std::vector<BasicBlock *> alternatives;
-
-  Value * firstOperand = I.getOperand(0);
-  Value * secondOperand = I.getOperand(1);
-
-  // First Xor alternative
-  // Implements : A xor B = (A or B) and not(A and B)
-  // The not operator isn't present in the LLVM IR for this reason I
-  // have used xor with a constant of all ones to obtain the not.
-  BasicBlock * BB = BasicBlock::Create(I.getContext());
-  BinaryOperator * orA = BinaryOperator::Create(Instruction::Or, firstOperand,
-                                                secondOperand, "", BB);
-  BinaryOperator * andA = BinaryOperator::Create(Instruction::And, firstOperand,
-                                                 secondOperand, "", BB);
-  IntegerType * type = IntegerType::get(I.getContext(),
-                                        andA->getType()->getIntegerBitWidth());
-  Constant * allOnes = ConstantInt::get(type, type->getMask());
-  BinaryOperator * notA = BinaryOperator::Create(Instruction::Xor, andA,
-                                                 allOnes, "", BB);
-  BinaryOperator::Create(Instruction::And, notA, orA, "", BB);
-
-  alternatives.push_back(BB);
-
-  // Second Xor alternative
-  // Implements : A xor B = (A and not B) or (not A and B)
-  BB = BasicBlock::Create(I.getContext());
-  BinaryOperator * notB = BinaryOperator::Create(Instruction::Xor, secondOperand,
-                                                 allOnes, "", BB);
-  andA = BinaryOperator::Create(Instruction::And, firstOperand,
-                                notB, "", BB);
-  notA = BinaryOperator::Create(Instruction::Xor, firstOperand,
-                                allOnes, "", BB);
-  BinaryOperator * andB = BinaryOperator::Create(Instruction::And, secondOperand,
-                                                 notA, "", BB);
-  orA = BinaryOperator::Create(Instruction::Or, andA, andB, "", BB);
-
-  alternatives.push_back(BB);
-
-  return alternatives;
-}
+#include <generated/BuildAlternatives.def>
 
 
 std::vector<llvm::BasicBlock *>
@@ -98,7 +56,7 @@ InstructionAlternatives::Build(llvm::Instruction & I)
     break
 
   switch (type) {
-    HANDLE_ISTRUCTION_TYPE(Xor);
+#include <generated/HandleInstruction.def>
     case LastInstructionTy:
       break;
   }
