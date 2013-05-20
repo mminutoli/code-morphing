@@ -66,12 +66,22 @@ You need to build the `configure` script:
     $ ./AutoRegen.sh
 #+END_SRC
 
+Then you have to generate the alternatives builders. To do that check
+out [[https://github.com/mminutoli/code-morphing-generator][Code Morphing Generator]] project and build it. After that write
+your instruction alternatives source file.
+
+#+BEGIN_SRC: shell
+    $ cd $LLVM_SRC/projects
+    $ cd code-morphing/includes/generated
+    $ ./<path-to-generator> <alternative-source.ia>
+#+END_SRC
+
 Finally you have to build it:
 
 #+BEGIN_SRC: shell
     $ cd $LLVM_BUILD/projects
-    $ mkdir cot
-    $ cd cot
+    $ mkdir code-morphing
+    $ cd code-morphing
     $ $LLVM_SRC/projects/code-morphing/configure --prefix=$LLVM_ROOT
     $ make -j $N
 #+END_SRC
@@ -135,6 +145,8 @@ scratch are:
 - Handle the instruction inside getInstTy
 - Implement the build function
 - Add tests for the new alternative
+
+All these steps are done automatilly from the [[https://github.com/mminutoli/code-morphing-generator][Code Morphing Generator]].
 
 ** Add the instruction to the enumeration
 
