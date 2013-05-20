@@ -1,0 +1,8 @@
+
+* What is this?
+
+This directory is meant to contain heards generated with
+morph-pass-generator.
+
+Everything is explained in the top README.org, please refer to that to
+find out how to do it.
