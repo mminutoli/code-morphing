@@ -8,6 +8,23 @@ It's licensed under the GPL v3 as stated in every source file in the
 project. For any further information on the license please refer to
 http://www.gnu.org/licenses/gpl.html
 
+* Project organization
+
+The whole project is split in three part:
+ - An LLVM pass that does the instruction morphing.
+ - A code generator that starting from a language that we have defined
+   builds the alternatives table used inside the pass.
+ - A testing project that I used to test if the transformation pass
+   works on a real algorithm (AES from polar)
+
+All the three project are hosted on github you can find them at:
+ - LLVM Pass :: well, I suppose you already know where it is ;)
+ - Code Generator :: [[https://github.com/mminutoli/code-morphing-generator][Code Morphing Generator]]
+ - Testing Project :: [[https://github.com/mminutoli/code-morphing-tests][Code Morphing Test]]
+
+In the following section you should find all the details necessary to
+build everything and be up and running. If anything... just ask.
+
 * Quick Start
 
 It is strongly encouraged to keep source tree separated from build tree, so we
