@@ -90,20 +90,15 @@ INITIALIZE_PASS(CodeMorphing, "static-morphing",
 static bool
 BuildReplacementList(Function & F, std::vector<replacement> & V)
 {
-  typedef Function::BasicBlockListType::iterator BlockListIterator;
-  for (BlockListIterator block = F.begin(), lastBlock = F.end();
-       block != lastBlock; ++block)
+  for (auto & block : F)
   {
-    typedef BasicBlock::iterator InstructionIterator;
-    for (InstructionIterator instruction = block->begin(),
-                         lastInstruction = block->end();
-         instruction != lastInstruction; ++instruction)
+    for (auto & instruction : block)
     {
       std::vector<BasicBlock *> alternativeBlocks =
-          InstructionAlternatives::Build(*instruction);
+          InstructionAlternatives::Build(instruction);
       if (!alternativeBlocks.empty())
       {
-        replacement rep = std::make_pair(&*instruction, alternativeBlocks);
+        replacement rep = std::make_pair(&instruction, alternativeBlocks);
         V.push_back(rep);
       }
     }
@@ -129,11 +124,10 @@ InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
 {
   bool result = false;
 
-  typedef std::vector<replacement>::iterator ReplacementItr;
-  for (ReplacementItr I = V.begin(), E = V.end(); I != E; ++I)
+  for (auto & replacement : V)
   {
-    Instruction * i = I->first;
-    std::vector<BasicBlock *> & replacementList = I->second;
+    Instruction * i = replacement.first;
+    std::vector<BasicBlock *> & replacementList = replacement.second;
 
     // Split the block containing I
     BasicBlock * upperBlock = i->getParent();
@@ -155,7 +149,7 @@ InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
 
     GetElementPtrInst * alternativesPtr =
         GetElementPtrInst::CreateInBounds(alternativesVector, indexes, "",
-                                          upperBlock);
+                                          upperBlock->getTerminator());
     LoadInst * numberOfAlternatives =
         new LoadInst(alternativesPtr, "", upperBlock->getTerminator());
 
@@ -175,19 +169,16 @@ InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
     lowerBlock->getInstList().push_front(phi);
 
     unsigned int alternative = 1;
-    for (std::vector<BasicBlock *>::iterator
-             replacement = replacementList.begin(),
-             lastReplacement = replacementList.end();
-         replacement != lastReplacement; ++replacement)
+    for (auto replacement : replacementList)
     {
       ConstantInt * alternativeNumber =
           ConstantInt::get(Int32Ty, alternative);
-      test->addCase(alternativeNumber, *replacement);
+      test->addCase(alternativeNumber, replacement);
 
-      phi->addIncoming(&(*replacement)->back(), *replacement);
+      phi->addIncoming(&(replacement)->back(), replacement);
 
-      BranchInst::Create(lowerBlock, *replacement);
-      F.getBasicBlockList().push_back(*replacement);
+      BranchInst::Create(lowerBlock, replacement);
+      F.getBasicBlockList().push_back(replacement);
 
       ++alternative;
     }
