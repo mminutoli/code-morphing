@@ -137,9 +137,9 @@ InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
 
     // Split the block containing I
     BasicBlock * upperBlock = i->getParent();
-    BasicBlock * originalBlock = SplitBlock(upperBlock, i, P);
+    BasicBlock * originalBlock = SplitBlock(upperBlock, i);
     originalBlock->setName("");
-    BasicBlock * lowerBlock = SplitBlock(originalBlock, i->getNextNode(), P);
+    BasicBlock * lowerBlock = SplitBlock(originalBlock, i->getNextNode());
     lowerBlock->setName("");
 
     IntegerType * Int32Ty = Type::getInt32Ty(F.getContext());
@@ -154,8 +154,8 @@ InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
     indexes.push_back(index);
 
     GetElementPtrInst * alternativesPtr =
-        GetElementPtrInst::Create(alternativesVector, indexes, "",
-                                  upperBlock->getTerminator());
+        GetElementPtrInst::CreateInBounds(alternativesVector, indexes, "",
+                                          upperBlock);
     LoadInst * numberOfAlternatives =
         new LoadInst(alternativesPtr, "", upperBlock->getTerminator());
 
@@ -170,7 +170,7 @@ InsertAlternativeBlocks(Function & F, std::vector<replacement> & V, Pass * P)
     test->addCase(zero, originalBlock);
     PHINode * phi = PHINode::Create(i->getType(), 0);
     i->replaceAllUsesWith(phi);
-    phi->addIncoming(originalBlock->begin(), originalBlock);
+    phi->addIncoming(&*originalBlock->begin(), originalBlock);
 
     lowerBlock->getInstList().push_front(phi);
 
